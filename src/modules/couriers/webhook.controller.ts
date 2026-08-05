@@ -23,6 +23,17 @@ export class CourierWebhookController {
     @Body() body: any,
     @Headers('shippo-signature') signature: string,
   ) {
+
+     console.log(
+    'SHIPPO WEBHOOK RECEIVED:',
+    JSON.stringify(body, null, 2),
+  );
+
+  console.log(
+    'SHIPPO SIGNATURE:',
+    signature ?? 'not-provided',
+  );
+
     return this.service.handleShippoWebhook(
       body,
       signature,
