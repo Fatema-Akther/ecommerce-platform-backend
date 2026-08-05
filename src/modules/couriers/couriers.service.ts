@@ -1426,6 +1426,160 @@ const shipment = await this.shipmentRepo.findOne({
 // }
 
 
+// async handleShippoWebhook(
+//   data: any,
+//   signature?: string,
+// ) {
+//   if (data?.event !== 'track_updated') {
+//     return {
+//       success: true,
+//       message: 'Ignored unsupported Shippo event',
+//     };
+//   }
+
+//   const trackingNumber = String(
+//     data?.data?.tracking_number || '',
+//   ).trim();
+
+//   if (!trackingNumber) {
+//     return {
+//       success: true,
+//       message: 'No tracking number',
+//     };
+//   }
+
+//   return this.dataSource.transaction(
+//     async (manager) => {
+//       const shipment = await manager.findOne(
+//         OrderShipment,
+//         {
+//           where: {
+//             trackingNumber,
+//           },
+//           relations: {
+//             order: {
+//               items: {
+//                 product: true,
+//               },
+//             },
+//             courierProvider: true,
+//           } as any,
+//           lock: {
+//             mode: 'pessimistic_write',
+//           },
+//         },
+//       );
+
+//       if (!shipment) {
+//         return {
+//           success: true,
+//           message: 'Shipment not found',
+//         };
+//       }
+
+//       const trackingStatus =
+//         data?.data?.tracking_status;
+
+//       const mappedStatus =
+//         this.mapShippoStatus(
+//           trackingStatus?.status,
+//           trackingStatus?.substatus?.code,
+//           trackingStatus?.status_details,
+//         );
+
+//       shipment.responsePayload = {
+//         ...(shipment.responsePayload || {}),
+//         webhook: data,
+//         lastWebhookAt: new Date().toISOString(),
+//       };
+
+//       if (!mappedStatus) {
+//         await manager.save(
+//           OrderShipment,
+//           shipment,
+//         );
+
+//         return {
+//           success: true,
+//           message: 'Unknown status stored without changing shipment',
+//         };
+//       }
+
+//       /*
+//        * Repeated Shippo webhook হলে আবার stock restore বা
+//        * status processing হবে না।
+//        */
+//       if (
+//         shipment.courierStatus === mappedStatus
+//       ) {
+//         await manager.save(
+//           OrderShipment,
+//           shipment,
+//         );
+
+//         return {
+//           success: true,
+//           message: 'Already processed',
+//         };
+//       }
+
+//       shipment.courierStatus =
+//         mappedStatus;
+
+//       if (
+//         [
+//           'assigned_to_courier',
+//           'picked_up',
+//           'in_transit',
+//           'out_for_delivery',
+//         ].includes(mappedStatus)
+//       ) {
+//         shipment.sentAt =
+//           shipment.sentAt || new Date();
+//       }
+
+//       if (mappedStatus === 'delivered') {
+//         shipment.deliveredAt =
+//           shipment.deliveredAt || new Date();
+//       }
+
+//       if (mappedStatus === 'returned') {
+//         shipment.returnedAt =
+//           shipment.returnedAt || new Date();
+//       }
+
+//       shipment.note = shipment.note
+//         ? `${shipment.note}\n[SHIPPO:${mappedStatus}] ${
+//             trackingStatus?.status_details ||
+//             trackingStatus?.status ||
+//             'Tracking updated'
+//           }`
+//         : `[SHIPPO:${mappedStatus}] ${
+//             trackingStatus?.status_details ||
+//             trackingStatus?.status ||
+//             'Tracking updated'
+//           }`;
+
+//       await manager.save(
+//         OrderShipment,
+//         shipment,
+//       );
+
+//       await this.syncOrderStatusFromCourierStatus(
+//         manager,
+//         shipment.order,
+//         mappedStatus,
+//       );
+
+//       return {
+//         success: true,
+//         shipmentStatus: mappedStatus,
+//         orderStatus: shipment.order.status,
+//       };
+//     },
+//   );
+// }
+
 async handleShippoWebhook(
   data: any,
   signature?: string,
@@ -1450,25 +1604,19 @@ async handleShippoWebhook(
 
   return this.dataSource.transaction(
     async (manager) => {
-      const shipment = await manager.findOne(
-        OrderShipment,
-        {
-          where: {
-            trackingNumber,
-          },
-          relations: {
-            order: {
-              items: {
-                product: true,
-              },
-            },
-            courierProvider: true,
-          } as any,
-          lock: {
-            mode: 'pessimistic_write',
-          },
-        },
-      );
+      /*
+       * শুধু order_shipments row lock করুন।
+       * Lock query-তে relations/LEFT JOIN ব্যবহার করবেন না।
+       */
+      const shipment = await manager
+        .getRepository(OrderShipment)
+        .createQueryBuilder('shipment')
+        .where(
+          'shipment.trackingNumber = :trackingNumber',
+          { trackingNumber },
+        )
+        .setLock('pessimistic_write')
+        .getOne();
 
       if (!shipment) {
         return {
@@ -1476,6 +1624,28 @@ async handleShippoWebhook(
           message: 'Shipment not found',
         };
       }
+
+      /*
+       * Order আলাদাভাবে load করুন।
+       * Stock restore করার জন্য items প্রয়োজন।
+       */
+      const order = await manager.findOne(Order, {
+        where: {
+          id: shipment.orderId,
+        },
+        relations: {
+          items: true,
+        },
+      });
+
+      if (!order) {
+        return {
+          success: true,
+          message: 'Order not found',
+        };
+      }
+
+      shipment.order = order;
 
       const trackingStatus =
         data?.data?.tracking_status;
@@ -1501,13 +1671,13 @@ async handleShippoWebhook(
 
         return {
           success: true,
-          message: 'Unknown status stored without changing shipment',
+          message:
+            'Unknown status stored without changing shipment',
         };
       }
 
       /*
-       * Repeated Shippo webhook হলে আবার stock restore বা
-       * status processing হবে না।
+       * Duplicate webhook হলে stock দ্বিতীয়বার restore হবে না।
        */
       if (
         shipment.courierStatus === mappedStatus
@@ -1548,17 +1718,17 @@ async handleShippoWebhook(
           shipment.returnedAt || new Date();
       }
 
+      const statusDescription =
+        trackingStatus?.status_details ||
+        trackingStatus?.status ||
+        'Tracking updated';
+
+      const noteLine =
+        `[SHIPPO:${mappedStatus}] ${statusDescription}`;
+
       shipment.note = shipment.note
-        ? `${shipment.note}\n[SHIPPO:${mappedStatus}] ${
-            trackingStatus?.status_details ||
-            trackingStatus?.status ||
-            'Tracking updated'
-          }`
-        : `[SHIPPO:${mappedStatus}] ${
-            trackingStatus?.status_details ||
-            trackingStatus?.status ||
-            'Tracking updated'
-          }`;
+        ? `${shipment.note}\n${noteLine}`
+        : noteLine;
 
       await manager.save(
         OrderShipment,
@@ -1567,18 +1737,19 @@ async handleShippoWebhook(
 
       await this.syncOrderStatusFromCourierStatus(
         manager,
-        shipment.order,
+        order,
         mappedStatus,
       );
 
       return {
         success: true,
         shipmentStatus: mappedStatus,
-        orderStatus: shipment.order.status,
+        orderStatus: order.status,
       };
     },
   );
 }
+
 
 
 async updateShipmentRate(
