@@ -706,6 +706,16 @@ private async validateCartStockForCheckout(
 
       const current = order.status;
       const next = dto.status;
+      if (
+  current === 'returned' &&
+  next === 'refunded' &&
+  order.paymentMethod === 'cod'
+) {
+  throw new BadRequestException(
+    'COD returned order does not require a refund',
+  );
+}
+
 
       const allowedTransitions: Record<string, string[]> = {
         pending: ['processing', 'cancelled'],
@@ -733,11 +743,28 @@ private async validateCartStockForCheckout(
   order.reviewedAt = new Date();
 }
 
-    if (next === 'cancelled' || next === 'refunded') {
-  await this.restoreStockForRefundedOrder(manager, order);
+   if (next === 'cancelled') {
+  await this.restoreStockForRefundedOrder(
+    manager,
+    order,
+  );
+
   order.reviewedAt = new Date();
 }
 
+if (next === 'refunded') {
+  /*
+   * returned webhook-এ stock ইতিমধ্যে restore হয়েছে।
+   */
+  if (current !== 'returned') {
+    await this.restoreStockForRefundedOrder(
+      manager,
+      order,
+    );
+  }
+
+  order.reviewedAt = new Date();
+}
       order.status = next;
 
       order.adminReviewNote = dto.note?.trim()
