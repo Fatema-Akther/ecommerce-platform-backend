@@ -26,48 +26,48 @@ import { RedisModule } from '@nestjs-modules/ioredis';
 
     // for local
 
-// RedisModule.forRootAsync({
-//   inject: [ConfigService],
-//   useFactory: (config: ConfigService) => {
-//     const useTLS = config.get<string>('REDIS_TLS') === 'true';
+RedisModule.forRootAsync({
+  inject: [ConfigService],
+  useFactory: (config: ConfigService) => {
+    const useTLS = config.get<string>('REDIS_TLS') === 'true';
 
-//     return {
-//       type: 'single',
-//       options: {
-//         url: config.get<string>('REDIS_URL') || undefined,
-//         host: config.get<string>('REDIS_HOST') || '127.0.0.1',
-//         port: Number(config.get<string>('REDIS_PORT') || 6379),
-//         password: config.get<string>('REDIS_PASSWORD') || undefined,
-//         tls: useTLS ? {} : undefined,
-//       },
-//     };
-//   },
-// }),
+    return {
+      type: 'single',
+      options: {
+        url: config.get<string>('REDIS_URL') || undefined,
+        host: config.get<string>('REDIS_HOST') || '127.0.0.1',
+        port: Number(config.get<string>('REDIS_PORT') || 6379),
+        password: config.get<string>('REDIS_PASSWORD') || undefined,
+        tls: useTLS ? {} : undefined,
+      },
+    };
+  },
+}),
 
 
 //for live 
 
- RedisModule.forRootAsync({
-      inject: [ConfigService],
-      useFactory: (config: ConfigService) => {
-        const redisUrl = config.get<string>('REDIS_URL');
+//  RedisModule.forRootAsync({
+//       inject: [ConfigService],
+//       useFactory: (config: ConfigService) => {
+//         const redisUrl = config.get<string>('REDIS_URL');
 
-        if (!redisUrl) {
-          throw new Error('REDIS_URL is missing');
-        }
+//         if (!redisUrl) {
+//           throw new Error('REDIS_URL is missing');
+//         }
 
-        const url = new URL(redisUrl);
+//         const url = new URL(redisUrl);
 
-        return {
-          type: 'single',
-          options: {
-            host: url.hostname,
-            port: Number(url.port) || 6379,
-            password: url.password || undefined,
-          },
-        };
-      },
-    }),
+//         return {
+//           type: 'single',
+//           options: {
+//             host: url.hostname,
+//             port: Number(url.port) || 6379,
+//             password: url.password || undefined,
+//           },
+//         };
+//       },
+//     }),
 
    
 

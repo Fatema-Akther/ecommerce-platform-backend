@@ -1236,6 +1236,9 @@ if (cached) {
   return result;
 }
 
+
+
+
 // async flashDeals(query: {
 //   page?: number;
 //   limit?: number;
@@ -1244,44 +1247,80 @@ if (cached) {
 //   const limit = Math.min(50, query.limit || 20);
 //   const skip = (page - 1) * limit;
 
+//   const cacheKey = `flash:deals:${page}:${limit}`;
+//  const cached = await this.cache.get(cacheKey);
+// if (cached) return cached;
+
 //   const qb = this.repo
 //     .createQueryBuilder('p')
-//     .leftJoinAndSelect('p.category', 'c')
-//     .leftJoinAndSelect('c.parent', 'cp')
-//       .leftJoinAndSelect('p.variants', 'v')
-//     .orderBy('p.createdAt', 'DESC');
-
-//   this.applyPublishedFilter(qb);
-//   this.applyActiveFlashFilter(qb);
-
-//   qb.skip(skip).take(limit);
+//     .select([
+//       'p.id',
+//       'p.slug',
+//       'p.name',
+//       'p.price',
+//       'p.discountPrice',
+//       'p.stock',
+//       'p.totalStock',
+//       'p.hasVariants',
+//       'p.thumbnailUrl',
+//       'p.isFlashDeal',
+//       'p.flashStartAt',
+//       'p.flashEndAt',
+//       'p.createdAt',
+//     ])
+//     .where('p.isPublished = :isPublished', { isPublished: true })
+//     .andWhere('p.isFlashDeal = :isFlashDeal', { isFlashDeal: true })
+//     .andWhere('p.discountPrice IS NOT NULL')
+//     .andWhere('p.discountPrice > 0')
+//     .andWhere('p.discountPrice < p.price')
+//     .andWhere('(p.flashStartAt IS NULL OR p.flashStartAt <= :now)', { now: new Date() })
+//     .andWhere('(p.flashEndAt IS NULL OR p.flashEndAt >= :now)', { now: new Date() })
+//     .orderBy('p.createdAt', 'DESC')
+//     .skip(skip)
+//     .take(limit);
 
 //   const [items, total] = await qb.getManyAndCount();
 
-//   return {
+//   const result = {
 //     items: items.map((p) => this.toProductCard(p)),
 //     page,
 //     limit,
 //     total,
 //     hasMore: skip + items.length < total,
 //   };
-// }
 
+// await this.cache.set(cacheKey, result, 10000);
+//   return result;
+// }
 
 async flashDeals(query: {
   page?: number;
   limit?: number;
 }) {
-  const page = Math.max(1, query.page || 1);
-  const limit = Math.min(50, query.limit || 20);
+  const page = Math.max(1, Number(query.page || 1));
+  const limit = Math.min(50, Math.max(1, Number(query.limit || 20)));
   const skip = (page - 1) * limit;
 
   const cacheKey = `flash:deals:${page}:${limit}`;
- const cached = await this.cache.get(cacheKey);
-if (cached) return cached;
+
+  const cached = await this.cache.get(cacheKey);
+
+  if (cached) {
+    return cached;
+  }
+
+  const now = new Date();
 
   const qb = this.repo
     .createQueryBuilder('p')
+    .leftJoinAndSelect(
+      'p.variants',
+      'v',
+      'v.isActive = :variantIsActive',
+      {
+        variantIsActive: true,
+      },
+    )
     .select([
       'p.id',
       'p.slug',
@@ -1296,14 +1335,33 @@ if (cached) return cached;
       'p.flashStartAt',
       'p.flashEndAt',
       'p.createdAt',
+
+      'v.id',
+      'v.stock',
+      'v.options',
+      'v.extraPrice',
+      'v.sku',
+      'v.colorCode',
+      'v.combinationKey',
+      'v.isActive',
     ])
-    .where('p.isPublished = :isPublished', { isPublished: true })
-    .andWhere('p.isFlashDeal = :isFlashDeal', { isFlashDeal: true })
+    .where('p.isPublished = :isPublished', {
+      isPublished: true,
+    })
+    .andWhere('p.isFlashDeal = :isFlashDeal', {
+      isFlashDeal: true,
+    })
     .andWhere('p.discountPrice IS NOT NULL')
     .andWhere('p.discountPrice > 0')
     .andWhere('p.discountPrice < p.price')
-    .andWhere('(p.flashStartAt IS NULL OR p.flashStartAt <= :now)', { now: new Date() })
-    .andWhere('(p.flashEndAt IS NULL OR p.flashEndAt >= :now)', { now: new Date() })
+    .andWhere(
+      '(p.flashStartAt IS NULL OR p.flashStartAt <= :now)',
+      { now },
+    )
+    .andWhere(
+      '(p.flashEndAt IS NULL OR p.flashEndAt >= :now)',
+      { now },
+    )
     .orderBy('p.createdAt', 'DESC')
     .skip(skip)
     .take(limit);
@@ -1311,18 +1369,19 @@ if (cached) return cached;
   const [items, total] = await qb.getManyAndCount();
 
   const result = {
-    items: items.map((p) => this.toProductCard(p)),
+    items: items.map((product) => this.toProductCard(product)),
     page,
     limit,
     total,
     hasMore: skip + items.length < total,
   };
 
-await this.cache.set(cacheKey, result, 10000);
+  if (items.length > 0) {
+    await this.cache.set(cacheKey, result, 10000);
+  }
+
   return result;
 }
-
-
 
 
 async deleteProductMedia(productId: string, mediaId: string) {
