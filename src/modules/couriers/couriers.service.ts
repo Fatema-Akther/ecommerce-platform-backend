@@ -124,11 +124,7 @@ private buildTrackingUrl(shipment: OrderShipment) {
 
   const url = this.buildTrackingUrl(shipment);
 
-  console.log(
-    "BUILD TRACKING URL:",
-    url,
-    shipment.responsePayload
-  );
+ 
 
   shipment.trackingUrl = url;
 
@@ -940,10 +936,7 @@ address_to:
 
 
 
-console.log(
-  "FINAL SAVING TRACKING URL:",
-  JSON.stringify(shipment.responsePayload, null, 2)
-);
+
 
   await this.shipmentRepo.save(
     shipment

@@ -131,10 +131,7 @@ private calculateTotalWeight(items: any[]) {
   const DEFAULT_WEIGHT = 0.4;
 
 
-  console.log(
-    "SHIPPO ITEMS WEIGHT DEBUG",
-    JSON.stringify(items, null, 2)
-  );
+ 
 
   return items.reduce(
     (total, item) => {
@@ -349,10 +346,7 @@ private async getCarrierAccounts(
         orderData,
       );
 
-console.log(
-  "SHIPPO PAYLOAD",
-  JSON.stringify(payload,null,2)
-);
+
 
     const data =
       await this.createShippoShipment(
