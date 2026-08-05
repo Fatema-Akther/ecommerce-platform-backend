@@ -24,11 +24,12 @@ export type OrderStatus =
   | 'processing'
   | 'shipped'
   | 'delivered'
-   | 'completed'
-  
+  | 'completed'
+  | 'delivery_failed'
+  | 'returned'
   | 'cancelled'
   | 'failed'
-  | 'refunded'
+  | 'refunded';
 
 export type ReviewStatus =
   | 'clear'

@@ -198,6 +198,47 @@ private async restoreStockForCourierReturnedOrder(
   }
 }
 
+// private async syncOrderStatusFromCourierStatus(
+//   manager: EntityManager,
+//   order: Order,
+//   courierStatus: CourierShipmentStatus,
+// ) {
+//   const currentStatus = order.status;
+
+//   if (courierStatus === 'delivered') {
+//     if (['processing', 'shipped'].includes(currentStatus)) {
+//       order.status = 'delivered';
+//       order.adminReviewNote = order.adminReviewNote
+//         ? `${order.adminReviewNote}\n[COURIER_AUTO:delivered] Order marked as delivered from courier status`
+//         : '[COURIER_AUTO:delivered] Order marked as delivered from courier status';
+
+//       await manager.save(Order, order);
+//     }
+
+//     return;
+//   }
+
+//   if (courierStatus === 'returned') {
+//     if (['cancelled', 'failed', 'refunded'].includes(currentStatus)) {
+//       return;
+//     }
+
+//     const nextOrderStatus =
+//       ['delivered', 'completed'].includes(currentStatus) ? 'refunded' : 'cancelled';
+
+//     await this.restoreStockForCourierReturnedOrder(manager, order);
+
+//     order.status = nextOrderStatus;
+//     order.reviewedAt = new Date();
+//     order.adminReviewNote = order.adminReviewNote
+//       ? `${order.adminReviewNote}\n[COURIER_AUTO:returned] Order marked as ${nextOrderStatus} from courier returned status`
+//       : `[COURIER_AUTO:returned] Order marked as ${nextOrderStatus} from courier returned status`;
+
+//     await manager.save(Order, order);
+//   }
+// }
+
+
 private async syncOrderStatusFromCourierStatus(
   manager: EntityManager,
   order: Order,
@@ -205,12 +246,76 @@ private async syncOrderStatusFromCourierStatus(
 ) {
   const currentStatus = order.status;
 
+  const terminalOrderStatuses = [
+    'completed',
+    'refunded',
+    'cancelled',
+    'returned',
+  ];
+
+  if (terminalOrderStatuses.includes(currentStatus)) {
+    return;
+  }
+
+  const appendNote = (line: string) => {
+    order.adminReviewNote = order.adminReviewNote
+      ? `${order.adminReviewNote}\n${line}`
+      : line;
+  };
+
+  if (
+    [
+      'assigned_to_courier',
+      'picked_up',
+      'in_transit',
+      'out_for_delivery',
+    ].includes(courierStatus)
+  ) {
+    if (['processing', 'paid'].includes(currentStatus)) {
+      order.status = 'shipped';
+
+      appendNote(
+        `[COURIER_AUTO:${courierStatus}] Order marked as shipped`,
+      );
+
+      await manager.save(Order, order);
+    }
+
+    return;
+  }
+
   if (courierStatus === 'delivered') {
-    if (['processing', 'shipped'].includes(currentStatus)) {
+    if (
+      [
+        'processing',
+        'shipped',
+        'delivery_failed',
+      ].includes(currentStatus)
+    ) {
       order.status = 'delivered';
-      order.adminReviewNote = order.adminReviewNote
-        ? `${order.adminReviewNote}\n[COURIER_AUTO:delivered] Order marked as delivered from courier status`
-        : '[COURIER_AUTO:delivered] Order marked as delivered from courier status';
+
+      appendNote(
+        '[COURIER_AUTO:delivered] Order marked as delivered',
+      );
+
+      await manager.save(Order, order);
+    }
+
+    return;
+  }
+
+  if (courierStatus === 'delivery_failed') {
+    if (
+      [
+        'processing',
+        'shipped',
+      ].includes(currentStatus)
+    ) {
+      order.status = 'delivery_failed';
+
+      appendNote(
+        '[COURIER_AUTO:delivery_failed] Carrier reported a delivery exception',
+      );
 
       await manager.save(Order, order);
     }
@@ -219,24 +324,36 @@ private async syncOrderStatusFromCourierStatus(
   }
 
   if (courierStatus === 'returned') {
-    if (['cancelled', 'failed', 'refunded'].includes(currentStatus)) {
+    if (
+      [
+        'cancelled',
+        'refunded',
+        'returned',
+      ].includes(currentStatus)
+    ) {
       return;
     }
 
-    const nextOrderStatus =
-      ['delivered', 'completed'].includes(currentStatus) ? 'refunded' : 'cancelled';
+    /*
+     * Stock restoration must happen only once,
+     * when the shipment becomes definitively returned.
+     */
+    await this.restoreStockForCourierReturnedOrder(
+      manager,
+      order,
+    );
 
-    await this.restoreStockForCourierReturnedOrder(manager, order);
-
-    order.status = nextOrderStatus;
+    order.status = 'returned';
     order.reviewedAt = new Date();
-    order.adminReviewNote = order.adminReviewNote
-      ? `${order.adminReviewNote}\n[COURIER_AUTO:returned] Order marked as ${nextOrderStatus} from courier returned status`
-      : `[COURIER_AUTO:returned] Order marked as ${nextOrderStatus} from courier returned status`;
+
+    appendNote(
+      '[COURIER_AUTO:returned] Shipment returned to sender and stock restored',
+    );
 
     await manager.save(Order, order);
   }
 }
+
 
 
   private async ensureDefaultCourierProviders() {
@@ -348,6 +465,62 @@ private calculateParcelWeight(items: any[]) {
   return totalWeight || DEFAULT_WEIGHT;
 }
 
+
+
+
+private mapShippoStatus(
+  status?: string,
+  substatusCode?: string,
+  statusDetails?: string,
+): CourierShipmentStatus | null {
+  const normalizedStatus = String(status || '')
+    .trim()
+    .toUpperCase();
+
+  const details = [
+    substatusCode,
+    statusDetails,
+  ]
+    .filter(Boolean)
+    .join(' ')
+    .toLowerCase();
+
+  switch (normalizedStatus) {
+    case 'PRE_TRANSIT':
+      return 'ready_to_ship';
+
+    case 'TRANSIT':
+      if (
+        details.includes('out for delivery') ||
+        details.includes('delivery today')
+      ) {
+        return 'out_for_delivery';
+      }
+
+      if (
+        details.includes('picked up') ||
+        details.includes('carrier received') ||
+        details.includes('accepted')
+      ) {
+        return 'picked_up';
+      }
+
+      return 'in_transit';
+
+    case 'DELIVERED':
+      return 'delivered';
+
+    case 'RETURNED':
+      return 'returned';
+
+    case 'FAILURE':
+      return 'delivery_failed';
+
+    case 'UNKNOWN':
+    default:
+      return null;
+  }
+}
 
 
 // async getShippingRates(orderData:any) {
@@ -1148,108 +1321,263 @@ const shipment = await this.shipmentRepo.findOne({
 
 
 
+// async handleShippoWebhook(
+//   data: any,
+//   signature?: string,
+// ) {
+
+//   const eventType = data?.event;
+
+//   if (!eventType) {
+//     throw new BadRequestException(
+//       'Invalid Shippo webhook payload',
+//     );
+//   }
+
+
+//   const trackingNumber =
+//     data?.data?.tracking_number;
+
+
+//   if (!trackingNumber) {
+//     return {
+//       message: 'No tracking number',
+//     };
+//   }
+
+
+//   const shipment =
+//     await this.shipmentRepo.findOne({
+//       where: {
+//         trackingNumber,
+//       },
+//       relations: {
+//         order: {
+//           items: {
+//             product: true,
+//           },
+//         },
+//       } as any,
+//     });
+
+
+//   if (!shipment) {
+//     return {
+//       message: 'Shipment not found',
+//     };
+//   }
+
+
+//   shipment.responsePayload = {
+//     ...(shipment.responsePayload || {}),
+//     webhook: data,
+//   };
+
+
+//   switch(eventType) {
+
+//     case 'track_updated':
+
+//       const status =
+//         data.data.tracking_status?.status;
+
+
+//       if (status === 'DELIVERED') {
+//         shipment.courierStatus = 'delivered';
+//         shipment.deliveredAt =
+//           shipment.deliveredAt || new Date();
+//       }
+
+
+//       if (
+//         [
+//           'FAILURE',
+//           'RETURNED',
+//         ].includes(status)
+//       ) {
+//         shipment.courierStatus = 'returned';
+//         shipment.returnedAt =
+//           shipment.returnedAt || new Date();
+//       }
+
+//       break;
+
+
+//     default:
+//       return {
+//         message:'Ignored event',
+//       };
+//   }
+
+
+//   await this.shipmentRepo.save(shipment);
+
+
+//   await this.syncOrderStatusFromCourierStatus(
+//     this.dataSource.manager,
+//     shipment.order,
+//     shipment.courierStatus,
+//   );
+
+
+//   return {
+//     success:true,
+//   };
+// }
+
+
 async handleShippoWebhook(
   data: any,
   signature?: string,
 ) {
-
-  const eventType = data?.event;
-
-  if (!eventType) {
-    throw new BadRequestException(
-      'Invalid Shippo webhook payload',
-    );
+  if (data?.event !== 'track_updated') {
+    return {
+      success: true,
+      message: 'Ignored unsupported Shippo event',
+    };
   }
 
-
-  const trackingNumber =
-    data?.data?.tracking_number;
-
+  const trackingNumber = String(
+    data?.data?.tracking_number || '',
+  ).trim();
 
   if (!trackingNumber) {
     return {
+      success: true,
       message: 'No tracking number',
     };
   }
 
-
-  const shipment =
-    await this.shipmentRepo.findOne({
-      where: {
-        trackingNumber,
-      },
-      relations: {
-        order: {
-          items: {
-            product: true,
+  return this.dataSource.transaction(
+    async (manager) => {
+      const shipment = await manager.findOne(
+        OrderShipment,
+        {
+          where: {
+            trackingNumber,
+          },
+          relations: {
+            order: {
+              items: {
+                product: true,
+              },
+            },
+            courierProvider: true,
+          } as any,
+          lock: {
+            mode: 'pessimistic_write',
           },
         },
-      } as any,
-    });
+      );
 
+      if (!shipment) {
+        return {
+          success: true,
+          message: 'Shipment not found',
+        };
+      }
 
-  if (!shipment) {
-    return {
-      message: 'Shipment not found',
-    };
-  }
+      const trackingStatus =
+        data?.data?.tracking_status;
 
+      const mappedStatus =
+        this.mapShippoStatus(
+          trackingStatus?.status,
+          trackingStatus?.substatus?.code,
+          trackingStatus?.status_details,
+        );
 
-  shipment.responsePayload = {
-    ...(shipment.responsePayload || {}),
-    webhook: data,
-  };
+      shipment.responsePayload = {
+        ...(shipment.responsePayload || {}),
+        webhook: data,
+        lastWebhookAt: new Date().toISOString(),
+      };
 
+      if (!mappedStatus) {
+        await manager.save(
+          OrderShipment,
+          shipment,
+        );
 
-  switch(eventType) {
+        return {
+          success: true,
+          message: 'Unknown status stored without changing shipment',
+        };
+      }
 
-    case 'track_updated':
+      /*
+       * Repeated Shippo webhook হলে আবার stock restore বা
+       * status processing হবে না।
+       */
+      if (
+        shipment.courierStatus === mappedStatus
+      ) {
+        await manager.save(
+          OrderShipment,
+          shipment,
+        );
 
-      const status =
-        data.data.tracking_status?.status;
+        return {
+          success: true,
+          message: 'Already processed',
+        };
+      }
 
+      shipment.courierStatus =
+        mappedStatus;
 
-      if (status === 'DELIVERED') {
-        shipment.courierStatus = 'delivered';
+      if (
+        [
+          'assigned_to_courier',
+          'picked_up',
+          'in_transit',
+          'out_for_delivery',
+        ].includes(mappedStatus)
+      ) {
+        shipment.sentAt =
+          shipment.sentAt || new Date();
+      }
+
+      if (mappedStatus === 'delivered') {
         shipment.deliveredAt =
           shipment.deliveredAt || new Date();
       }
 
-
-      if (
-        [
-          'FAILURE',
-          'RETURNED',
-        ].includes(status)
-      ) {
-        shipment.courierStatus = 'returned';
+      if (mappedStatus === 'returned') {
         shipment.returnedAt =
           shipment.returnedAt || new Date();
       }
 
-      break;
+      shipment.note = shipment.note
+        ? `${shipment.note}\n[SHIPPO:${mappedStatus}] ${
+            trackingStatus?.status_details ||
+            trackingStatus?.status ||
+            'Tracking updated'
+          }`
+        : `[SHIPPO:${mappedStatus}] ${
+            trackingStatus?.status_details ||
+            trackingStatus?.status ||
+            'Tracking updated'
+          }`;
 
+      await manager.save(
+        OrderShipment,
+        shipment,
+      );
 
-    default:
+      await this.syncOrderStatusFromCourierStatus(
+        manager,
+        shipment.order,
+        mappedStatus,
+      );
+
       return {
-        message:'Ignored event',
+        success: true,
+        shipmentStatus: mappedStatus,
+        orderStatus: shipment.order.status,
       };
-  }
-
-
-  await this.shipmentRepo.save(shipment);
-
-
-  await this.syncOrderStatusFromCourierStatus(
-    this.dataSource.manager,
-    shipment.order,
-    shipment.courierStatus,
+    },
   );
-
-
-  return {
-    success:true,
-  };
 }
 
 

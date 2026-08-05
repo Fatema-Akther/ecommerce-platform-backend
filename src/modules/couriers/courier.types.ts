@@ -1,6 +1,10 @@
-export const COURIER_MODES = ['manual', 'api'] as const;
+export const COURIER_MODES = [
+  'manual',
+  'api',
+] as const;
 
-export type CourierMode = (typeof COURIER_MODES)[number];
+export type CourierMode =
+  (typeof COURIER_MODES)[number];
 
 export const COURIER_SHIPMENT_STATUSES = [
   'not_assigned',
@@ -8,7 +12,9 @@ export const COURIER_SHIPMENT_STATUSES = [
   'assigned_to_courier',
   'picked_up',
   'in_transit',
+  'out_for_delivery',
   'delivered',
+  'delivery_failed',
   'returned',
   'cancelled',
 ] as const;
