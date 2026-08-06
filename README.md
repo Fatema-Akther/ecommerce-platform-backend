@@ -1,5 +1,13 @@
 # 🛒 E-Commerce Backend API
 
+![NestJS](https://img.shields.io/badge/NestJS-v11-red)
+![TypeScript](https://img.shields.io/badge/TypeScript-5-blue)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-blue)
+![JWT](https://img.shields.io/badge/Auth-JWT-orange)
+![RBAC](https://img.shields.io/badge/Authorization-RBAC-success)
+![Shippo](https://img.shields.io/badge/Shippo-Integrated-00B388)
+![Stripe](https://img.shields.io/badge/Stripe-Test%20Mode-635BFF)
+
 Production-ready **NestJS** backend powering a complete eCommerce platform with secure authentication, advanced order management, inventory control, shipping integration, and business analytics.
 
 ---
@@ -10,7 +18,7 @@ Production-ready **NestJS** backend powering a complete eCommerce platform with 
 
 **Backend API:** https://api.sumashop.xyz
 
-> Replace the Backend API URL after deployment.
+
 
 ---
 
@@ -24,7 +32,7 @@ Production-ready **NestJS** backend powering a complete eCommerce platform with 
 - Passport.js
 - Role Based Access Control (RBAC)
 - Cloudinary
-- Shippo API
+- Shippo API & Webhooks
 - Stripe (Test Mode / Mock Payment)
 - REST API
 
@@ -43,7 +51,7 @@ Production-ready **NestJS** backend powering a complete eCommerce platform with 
 - Checkout
 - Order Management
 - Inventory Management
-- Payment Processing (Stripe Test Mode)
+- Payments (Cash on Delivery + Stripe Test Mode)
 - Shipping Integration
 - Refund Workflow
 - Sales Analytics
@@ -51,19 +59,18 @@ Production-ready **NestJS** backend powering a complete eCommerce platform with 
 
 ---
 
-# 🧠 Business Logic
+## 🧠 Business Logic
 
 Unlike a basic CRUD application, this project includes several real-world business workflows:
 
 - Automatic stock reservation during checkout
-- Automatic inventory restoration after order cancellation
-- Cash on Delivery (COD) verification workflow
-- Fraud risk detection
+- Automatic inventory restoration after cancellation or refund
+- Rule-based fraud risk scoring for Cash on Delivery (COD) orders
+- High-risk order review and manual verification workflow
 - Order lifecycle management
-- Shipping status synchronization
-- Refund processing
-- Revenue analytics
-- Inventory tracking
+- Shippo shipping status synchronization
+- Refund processing workflow
+- Sales and revenue analytics
 
 ---
 
@@ -77,11 +84,12 @@ Unlike a basic CRUD application, this project includes several real-world busine
 - Product Variants
 - Shopping Cart
 - Orders
-- Payments (Stripe Test Mode)
+- Payments
 - Shipping
 - Inventory
+- Fraud Detection
 - Analytics
-- Reports
+- Dashboard
 
 ---
 
@@ -109,17 +117,24 @@ Unlike a basic CRUD application, this project includes several real-world busine
 ```text
 src
 │
-├── auth
-├── users
-├── products
-├── categories
-├── cart
-├── orders
-├── payments
-├── shipping
-├── analytics
-├── common
-├── uploads
+├── common/
+├── config/
+├── modules/
+│   ├── admin/
+│   ├── auth/
+│   ├── business-settings/
+│   ├── cart/
+│   ├── categories/
+│   ├── couriers/
+│   ├── mail/
+│   ├── orders/
+│   │   └── payments/
+│   ├── products/
+│   ├── uploads/
+│   └── users/
+│
+├── migrations/
+├── app.module.ts
 └── main.ts
 ```
 
@@ -207,16 +222,20 @@ Inventory Updated
 
 | Module | Status |
 |---------|--------|
-| Authentication | ✅ |
+| Authentication (JWT) | ✅ |
+| Role-Based Access Control (RBAC) | ✅ |
 | Users | ✅ |
 | Products | ✅ |
 | Categories | ✅ |
+| Product Variants | ✅ |
+| Shopping Cart | ✅ |
 | Orders | ✅ |
-| Inventory | ✅ |
-| Payment verification workflow (Stripe Test Mode)| ✅ |
-| Shipping | ✅ |
-| Analytics | ✅ |
-| Reports | ✅ |
+| Payments (Cash on Delivery + Stripe Test Mode) | ✅ |
+| Shipping (Shippo API) | ✅ |
+| Inventory Management | ✅ |
+| Fraud Detection | ✅ |
+| Sales Analytics | ✅ |
+| Admin Dashboard | ✅ |
 
 ---
 
@@ -228,7 +247,7 @@ Inventory Updated
 - Wishlist
 - Product Reviews
 - Multi Vendor Support
-- Payment Gateway Integration
+- Live Payment Gateway Support
 
 ---
 
