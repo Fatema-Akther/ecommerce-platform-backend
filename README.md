@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/banner.png" alt="E-Commerce Backend API Banner" width="100%">
+</p>
+
 # 🛒 E-Commerce Backend API
 
 ![NestJS](https://img.shields.io/badge/NestJS-v11-red)
