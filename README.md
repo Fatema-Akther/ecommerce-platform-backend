@@ -8,7 +8,7 @@ Production-ready **NestJS** backend powering a complete eCommerce platform with 
 
 **Frontend:** https://www.sumashop.xyz
 
-**Backend API:** https://your-backend-url.up.railway.app
+**Backend API:** https://api.sumashop.xyz
 
 > Replace the Backend API URL after deployment.
 
