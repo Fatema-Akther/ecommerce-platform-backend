@@ -25,7 +25,7 @@ Production-ready **NestJS** backend powering a complete eCommerce platform with 
 - Role Based Access Control (RBAC)
 - Cloudinary
 - Shippo API
-- Swagger
+- Stripe (Test Mode / Mock Payment)
 - REST API
 
 ---
@@ -43,6 +43,7 @@ Production-ready **NestJS** backend powering a complete eCommerce platform with 
 - Checkout
 - Order Management
 - Inventory Management
+- Payment Processing (Stripe Test Mode)
 - Shipping Integration
 - Refund Workflow
 - Sales Analytics
@@ -76,7 +77,7 @@ Unlike a basic CRUD application, this project includes several real-world busine
 - Product Variants
 - Shopping Cart
 - Orders
-- Payments
+- Payments (Stripe Test Mode)
 - Shipping
 - Inventory
 - Analytics
@@ -166,11 +167,11 @@ CLOUDINARY_API_SECRET=
 
 # 📸 API Preview
 
-### Swagger
+<!-- ### Swagger
 
 _Add Swagger Screenshot Here_
 
-OR
+OR -->
 
 ### Postman
 
@@ -214,6 +215,7 @@ Inventory Updated
 | Categories | ✅ |
 | Orders | ✅ |
 | Inventory | ✅ |
+| Payment verification workflow (Stripe Test Mode)| ✅ |
 | Shipping | ✅ |
 | Analytics | ✅ |
 | Reports | ✅ |
