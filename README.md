@@ -88,20 +88,18 @@ Unlike a basic CRUD application, this project includes several real-world busine
 # 🏗️ System Architecture
 
 ```text
-Next.js Frontend
-        │
-        ▼
-     REST API
-        │
-        ▼
-      NestJS
-        │
-        ▼
-   PostgreSQL Database
-        │
-   ┌─────────────┐
-   ▼             ▼
-Cloudinary     Shippo API
+                    Next.js Frontend
+                           │
+                           ▼
+                  REST API (HTTPS)
+                           │
+                           ▼
+                 NestJS Backend API
+                           │
+      ┌────────────┬──────────────┬─────────────┐
+      ▼            ▼              ▼             ▼
+ PostgreSQL   Cloudinary     Shippo API   Stripe (Test Mode)
+(Database)   (Image Store)    (Shipping)     (Payments)
 ```
 
 ---
