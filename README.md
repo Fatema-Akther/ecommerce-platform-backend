@@ -1,98 +1,237 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# 🛒 E-Commerce Backend API
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+Production-ready **NestJS** backend powering a complete eCommerce platform with secure authentication, advanced order management, inventory control, shipping integration, and business analytics.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+---
 
-## Description
+## 🌐 Live Demo
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+**Frontend:** https://www.sumashop.xyz
 
-## Project setup
+**Backend API:** https://your-backend-url.up.railway.app
 
-```bash
-$ npm install
+> Replace the Backend API URL after deployment.
+
+---
+
+# 🚀 Tech Stack
+
+- NestJS
+- TypeScript
+- PostgreSQL
+- TypeORM
+- JWT Authentication
+- Passport.js
+- Role Based Access Control (RBAC)
+- Cloudinary
+- Shippo API
+- Swagger
+- REST API
+
+---
+
+# ✨ Core Features
+
+- Secure JWT Authentication
+- Role Based Access Control (RBAC)
+- User Management
+- Product Management
+- Category Management
+- Product Variants
+- Product Images
+- Shopping Cart
+- Checkout
+- Order Management
+- Inventory Management
+- Shipping Integration
+- Refund Workflow
+- Sales Analytics
+- Dashboard Statistics
+
+---
+
+# 🧠 Business Logic
+
+Unlike a basic CRUD application, this project includes several real-world business workflows:
+
+- Automatic stock reservation during checkout
+- Automatic inventory restoration after order cancellation
+- Cash on Delivery (COD) verification workflow
+- Fraud risk detection
+- Order lifecycle management
+- Shipping status synchronization
+- Refund processing
+- Revenue analytics
+- Inventory tracking
+
+---
+
+# 📦 API Modules
+
+- Authentication
+- Users
+- Roles
+- Products
+- Categories
+- Product Variants
+- Shopping Cart
+- Orders
+- Payments
+- Shipping
+- Inventory
+- Analytics
+- Reports
+
+---
+
+# 🏗️ System Architecture
+
+```text
+Next.js Frontend
+        │
+        ▼
+     REST API
+        │
+        ▼
+      NestJS
+        │
+        ▼
+   PostgreSQL Database
+        │
+   ┌─────────────┐
+   ▼             ▼
+Cloudinary     Shippo API
 ```
 
-## Compile and run the project
+---
 
-```bash
-# development
-$ npm run start
+# 📂 Project Structure
 
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+```text
+src
+│
+├── auth
+├── users
+├── products
+├── categories
+├── cart
+├── orders
+├── payments
+├── shipping
+├── analytics
+├── common
+├── uploads
+└── main.ts
 ```
 
-## Run tests
+> Update the folder names if your project structure differs.
+
+---
+
+# ⚙️ Installation
 
 ```bash
-# unit tests
-$ npm run test
+git clone <repository-url>
 
-# e2e tests
-$ npm run test:e2e
+cd ecommerce-backend
 
-# test coverage
-$ npm run test:cov
+npm install
+
+npm run start:dev
 ```
 
-## Deployment
+---
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+# 🔑 Environment Variables
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+Create a `.env` file.
 
-```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+```env
+DATABASE_URL=
+
+JWT_SECRET=
+
+SHIPPO_API_KEY=
+
+CLOUDINARY_CLOUD_NAME=
+
+CLOUDINARY_API_KEY=
+
+CLOUDINARY_API_SECRET=
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+> Never commit your real secrets.
 
-## Resources
+---
 
-Check out a few resources that may come in handy when working with NestJS:
+# 📸 API Preview
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+### Swagger
 
-## Support
+_Add Swagger Screenshot Here_
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+OR
 
-## Stay in touch
+### Postman
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+_Add Postman Collection Screenshot Here_
 
-## License
+---
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+# 🔄 Order Workflow
+
+```text
+Customer Order
+      │
+      ▼
+Stock Reserved
+      │
+      ▼
+Payment Verification
+      │
+      ▼
+Shippo Shipping
+      │
+      ▼
+Courier Tracking
+      │
+      ▼
+Delivered
+      │
+      ▼
+Inventory Updated
+```
+
+---
+
+# 📊 Main Business Modules
+
+| Module | Status |
+|---------|--------|
+| Authentication | ✅ |
+| Users | ✅ |
+| Products | ✅ |
+| Categories | ✅ |
+| Orders | ✅ |
+| Inventory | ✅ |
+| Shipping | ✅ |
+| Analytics | ✅ |
+| Reports | ✅ |
+
+---
+
+# 📈 Future Improvements
+
+- Email Notifications
+- SMS Notifications
+- Coupon System
+- Wishlist
+- Product Reviews
+- Multi Vendor Support
+- Payment Gateway Integration
+
+---
+
+# 📄 License
+
+© 2026 Fatema Akther. All rights reserved.
