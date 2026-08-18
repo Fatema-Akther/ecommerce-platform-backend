@@ -149,7 +149,7 @@ src
 # ⚙️ Installation
 
 ```bash
-git clone https://github.com/Fatema-Akther/ecommerce-platform-backend
+git clone https://github.com/Fatema-Akther/ecommerce-platform-backend.git
 
 cd ecommerce-platform-backend
 
@@ -182,19 +182,7 @@ CLOUDINARY_API_SECRET=
 
 ---
 
-# 📸 API Preview
 
-<!-- ### Swagger
-
-_Add Swagger Screenshot Here_
-
-OR -->
-
-### Postman
-
-_Add Postman Collection Screenshot Here_
-
----
 
 # 🔄 Order Workflow
 
