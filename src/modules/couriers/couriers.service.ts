@@ -20,6 +20,7 @@ import { ProductVariant } from '../products/product-variant.entity';
 import { CourierFactory } from './strategies/courier.factory';
 
 import { AssignShipmentDto } from './dto/assign-shipment.dto';
+import { resolveTrackingUrl } from './utils/tracking-url.util';
 
 @Injectable()
 export class CouriersService implements OnModuleInit {
@@ -54,15 +55,20 @@ private variantRepo: Repository<ProductVariant>,
     return code.trim().toLowerCase().replace(/\s+/g, '_');
   }
 
+
+
 // private buildTrackingUrl(shipment: OrderShipment) {
 
 //   const payload: any = shipment.responsePayload || {};
 
 //   const trackingUrl =
 //     payload.label?.rawResponse?.tracking_url_provider ||
-//     payload.label?.trackingUrl ||
+//     payload.label?.rawResponse?.tracking_url ||
+//     payload.shipment?.transaction?.tracking_url_provider ||
+//     payload.shipment?.transaction?.tracking_url ||
+//     payload.shipment?.tracking_url_provider ||
 //     payload.tracking_url_provider ||
-//     payload.trackingUrl;
+//     shipment.trackingUrl;
 
 
 //   if (trackingUrl) {
@@ -85,51 +91,36 @@ private variantRepo: Repository<ProductVariant>,
 //   );
 // }
 
-private buildTrackingUrl(shipment: OrderShipment) {
+//  private attachTrackingUrl<T extends OrderShipment | null>(shipment: T): T {
+//   if (!shipment) return shipment;
 
-  const payload: any = shipment.responsePayload || {};
-
-  const trackingUrl =
-    payload.label?.rawResponse?.tracking_url_provider ||
-    payload.label?.rawResponse?.tracking_url ||
-    payload.shipment?.transaction?.tracking_url_provider ||
-    payload.shipment?.transaction?.tracking_url ||
-    payload.shipment?.tracking_url_provider ||
-    payload.tracking_url_provider ||
-    shipment.trackingUrl;
-
-
-  if (trackingUrl) {
-    return trackingUrl;
-  }
-
-
-  const pattern =
-    shipment.courierProvider?.trackingUrlPattern;
-
-
-  if (!pattern || !shipment.trackingNumber) {
-    return undefined;
-  }
-
-
-  return pattern.replace(
-    '{tracking_number}',
-    encodeURIComponent(shipment.trackingNumber),
-  );
-}
-
- private attachTrackingUrl<T extends OrderShipment | null>(shipment: T): T {
-  if (!shipment) return shipment;
-
-  const url = this.buildTrackingUrl(shipment);
+//   const url = this.buildTrackingUrl(shipment);
 
  
 
-  shipment.trackingUrl = url;
+//   shipment.trackingUrl = url;
 
-  return shipment;
+//   return shipment;
+// }
+
+
+private attachTrackingUrl<T extends OrderShipment | null>(
+ shipment:T,
+):T {
+
+ if(!shipment)
+   return shipment;
+
+
+ shipment.trackingUrl =
+   resolveTrackingUrl(
+     shipment,
+   );
+
+
+ return shipment;
 }
+
 
   private attachTrackingUrlsToOrder<T extends Order | null>(order: T): T {
     if (!order) return order;

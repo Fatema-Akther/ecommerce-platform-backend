@@ -47,27 +47,46 @@ import { RedisModule } from '@nestjs-modules/ioredis';
 
 //for live 
 
- RedisModule.forRootAsync({
-      inject: [ConfigService],
-      useFactory: (config: ConfigService) => {
-        const redisUrl = config.get<string>('REDIS_URL');
 
-        if (!redisUrl) {
-          throw new Error('REDIS_URL is missing');
-        }
 
-        const url = new URL(redisUrl);
+// RedisModule.forRootAsync({
+//       inject: [ConfigService],
+//       useFactory: (config: ConfigService) => {
+//         const redisUrl = config.get<string>('REDIS_URL');
 
-        return {
-          type: 'single',
-          options: {
-            host: url.hostname,
-            port: Number(url.port) || 6379,
-            password: url.password || undefined,
-          },
-        };
-      },
-    }),
+//         if (!redisUrl) {
+//           throw new Error('REDIS_URL is missing');
+//         }
+
+//         const url = new URL(redisUrl);
+
+//         return {
+//           type: 'single',
+//           options: {
+//             host: url.hostname,
+//             port: Number(url.port) || 6379,
+//             password: url.password || undefined,
+//           },
+//         };
+//       },
+//     }),
+
+
+RedisModule.forRootAsync({
+  inject: [ConfigService],
+  useFactory: (config: ConfigService) => {
+    const redisUrl = config.get<string>('REDIS_URL');
+
+    if (!redisUrl) {
+      throw new Error('REDIS_URL is missing');
+    }
+
+    return {
+      type: 'single',
+      url: redisUrl,
+    };
+  },
+}),
 
    
 
@@ -86,8 +105,8 @@ import { RedisModule } from '@nestjs-modules/ioredis';
             ssl: isProduction ? { rejectUnauthorized: false } : false,
 
  extra: {
-        max: 30,
-     min: 5,
+        max: 5,
+     min: 0,
       idleTimeoutMillis: 30000,
       connectionTimeoutMillis: 10000,
     },
@@ -106,8 +125,8 @@ import { RedisModule } from '@nestjs-modules/ioredis';
           autoLoadEntities: true,
 
           extra: {
-        max: 30,
-       min: 5,
+        max: 5,
+       min: 0,
         idleTimeoutMillis: 30000,
         connectionTimeoutMillis: 10000,
       },

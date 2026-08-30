@@ -24,6 +24,7 @@ import { ProductMedia } from '../products/product-media.entity';
 import { CouriersService } from '../couriers/couriers.service';
 import { CourierProvider } from '../couriers/courier-provider.entity';
 import { OrderShipment } from '../couriers/order-shipment.entity';
+import { resolveTrackingUrl } from '../couriers/utils/tracking-url.util';
 
 type RiskLevel = 'low' | 'medium' | 'high';
 
@@ -429,40 +430,62 @@ private orderRelations() {
   } as any;
 }
 
-private attachShipmentTrackingUrls<T extends Order | null>(order: T): T {
+// private attachShipmentTrackingUrls<T extends Order | null>(order: T): T {
+//   if (!order) return order;
+
+//   const shipments = (order as any).shipments || [];
+
+//   for (const shipment of shipments) {
+
+//     const trackingLink =
+//       shipment?.responsePayload?.consignment?.tracking_link;
+
+//     if (trackingLink) {
+//       shipment.trackingUrl = trackingLink;
+//       continue;
+//     }
+
+//     const pattern = shipment?.courierProvider?.trackingUrlPattern;
+//     const trackingNumber = shipment?.trackingNumber;
+
+//     if (!pattern || !trackingNumber) {
+//       shipment.trackingUrl = undefined;
+//       continue;
+//     }
+
+//     const encodedTracking = encodeURIComponent(trackingNumber);
+
+//     shipment.trackingUrl = pattern
+//       .replace(/\{tracking_number\}/g, encodedTracking)
+//       .replace(/\{trackingNumber\}/g, encodedTracking);
+//   }
+
+//   return order;
+// }
+
+private attachShipmentTrackingUrls<T extends Order | null>(
+  order:T,
+):T {
+
   if (!order) return order;
 
-  const shipments = (order as any).shipments || [];
+
+  const shipments =
+    (order as any).shipments || [];
+
 
   for (const shipment of shipments) {
 
-    const trackingLink =
-      shipment?.responsePayload?.consignment?.tracking_link;
+    shipment.trackingUrl =
+      resolveTrackingUrl(
+        shipment,
+      );
 
-    if (trackingLink) {
-      shipment.trackingUrl = trackingLink;
-      continue;
-    }
-
-    const pattern = shipment?.courierProvider?.trackingUrlPattern;
-    const trackingNumber = shipment?.trackingNumber;
-
-    if (!pattern || !trackingNumber) {
-      shipment.trackingUrl = undefined;
-      continue;
-    }
-
-    const encodedTracking = encodeURIComponent(trackingNumber);
-
-    shipment.trackingUrl = pattern
-      .replace(/\{tracking_number\}/g, encodedTracking)
-      .replace(/\{trackingNumber\}/g, encodedTracking);
   }
+
 
   return order;
 }
-
-
 
 
 private attachShipmentTrackingUrlsToOrders(orders: Order[]) {
