@@ -26,23 +26,23 @@ import { RedisModule } from '@nestjs-modules/ioredis';
 
     // for local
 
-RedisModule.forRootAsync({
-  inject: [ConfigService],
-  useFactory: (config: ConfigService) => {
-    const useTLS = config.get<string>('REDIS_TLS') === 'true';
+// RedisModule.forRootAsync({
+//   inject: [ConfigService],
+//   useFactory: (config: ConfigService) => {
+//     const useTLS = config.get<string>('REDIS_TLS') === 'true';
 
-    return {
-      type: 'single',
-      options: {
-        url: config.get<string>('REDIS_URL') || undefined,
-        host: config.get<string>('REDIS_HOST') || '127.0.0.1',
-        port: Number(config.get<string>('REDIS_PORT') || 6379),
-        password: config.get<string>('REDIS_PASSWORD') || undefined,
-        tls: useTLS ? {} : undefined,
-      },
-    };
-  },
-}),
+//     return {
+//       type: 'single',
+//       options: {
+//         url: config.get<string>('REDIS_URL') || undefined,
+//         host: config.get<string>('REDIS_HOST') || '127.0.0.1',
+//         port: Number(config.get<string>('REDIS_PORT') || 6379),
+//         password: config.get<string>('REDIS_PASSWORD') || undefined,
+//         tls: useTLS ? {} : undefined,
+//       },
+//     };
+//   },
+// }),
 
 
 //for live 
@@ -72,21 +72,21 @@ RedisModule.forRootAsync({
 //     }),
 
 
-// RedisModule.forRootAsync({
-//   inject: [ConfigService],
-//   useFactory: (config: ConfigService) => {
-//     const redisUrl = config.get<string>('REDIS_URL');
+RedisModule.forRootAsync({
+  inject: [ConfigService],
+  useFactory: (config: ConfigService) => {
+    const redisUrl = config.get<string>('REDIS_URL');
 
-//     if (!redisUrl) {
-//       throw new Error('REDIS_URL is missing');
-//     }
+    if (!redisUrl) {
+      throw new Error('REDIS_URL is missing');
+    }
 
-//     return {
-//       type: 'single',
-//       url: redisUrl,
-//     };
-//   },
-// }),
+    return {
+      type: 'single',
+      url: redisUrl,
+    };
+  },
+}),
 
    
 
