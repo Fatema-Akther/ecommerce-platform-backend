@@ -369,4 +369,109 @@ mail = {
       expect(users.save).not.toHaveBeenCalled();
     });
   });
+
+
+
+  describe('Additional Authentication Coverage', () => {
+    it('16. should reject OTP verification for unknown email', async () => {
+      users.findByEmail.mockResolvedValue(null);
+
+      await expect(
+        service.verifyEmailOtp('unknown@example.com', '123456'),
+      ).rejects.toThrow('Invalid email or OTP');
+    });
+
+    it('17. should reject OTP verification for already verified email', async () => {
+      users.findByEmail.mockResolvedValue(
+        makeUser({ isEmailVerified: true }),
+      );
+
+      await expect(
+        service.verifyEmailOtp('test@example.com', '123456'),
+      ).rejects.toThrow('Email already verified');
+    });
+
+    it('18. should reject OTP verification when token is missing', async () => {
+      users.findByEmail.mockResolvedValue(
+        makeUser({
+          isEmailVerified: false,
+          emailVerificationToken: null,
+          emailVerificationExpiresAt: null,
+        }),
+      );
+
+      await expect(
+        service.verifyEmailOtp('test@example.com', '123456'),
+      ).rejects.toThrow('OTP not found');
+    });
+
+    it('19. should reject invalid legacy verification token', async () => {
+      users.findByVerificationToken.mockResolvedValue(null);
+
+      await expect(
+        service.verifyEmail('invalid-token'),
+      ).rejects.toThrow('Invalid or expired token');
+    });
+
+    it('20. should verify email using valid legacy token', async () => {
+      const user = makeUser({ isEmailVerified: false });
+
+      users.findByVerificationToken.mockResolvedValue(user);
+
+      const result = await service.verifyEmail('valid-token');
+
+      expect(result.message).toBe('Email verified successfully');
+      expect(user.isEmailVerified).toBe(true);
+      expect(user.emailVerificationToken).toBeNull();
+      expect(user.emailVerificationExpiresAt).toBeNull();
+      expect(users.save).toHaveBeenCalledWith(user);
+    });
+
+    it('21. should not reveal whether an email exists during password recovery', async () => {
+      users.findByEmail.mockResolvedValue(null);
+
+      const result = await service.forgotPassword(
+        'unknown@example.com',
+      );
+
+      expect(result.message).toContain('If an account exists');
+      expect(mail.sendPasswordResetOtp).not.toHaveBeenCalled();
+    });
+
+    it('22. should reject password reset for unknown email', async () => {
+      users.findByEmail.mockResolvedValue(null);
+
+      await expect(
+        service.resetPassword(
+          'unknown@example.com',
+          '123456',
+          'NewPassword123!',
+        ),
+      ).rejects.toThrow('Invalid OTP or email');
+    });
+
+    it('23. should reject password reset with incorrect OTP', async () => {
+      const hashedOtp = await bcrypt.hash('123456', 4);
+
+      users.findByEmail.mockResolvedValue(
+        makeUser({
+          passwordResetToken: hashedOtp,
+          passwordResetExpiresAt: new Date(Date.now() + 600000),
+        }),
+      );
+
+      await expect(
+        service.resetPassword(
+          'test@example.com',
+          '999999',
+          'NewPassword123!',
+        ),
+      ).rejects.toThrow('Invalid OTP');
+
+      expect(users.save).not.toHaveBeenCalled();
+    });
+  });
+
+
+
 });
