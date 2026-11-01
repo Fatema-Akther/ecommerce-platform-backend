@@ -1,3 +1,6 @@
+![Backend CI](https://github.com/Fatema-Akther/ecommerce-platform-backend/actions/workflows/ci.yml/badge.svg)
+
+
 <p align="center">
   <img src="docs/banner.png" alt="E-Commerce Backend API Banner" width="100%">
 </p>
