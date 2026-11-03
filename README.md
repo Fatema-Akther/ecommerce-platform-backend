@@ -1,4 +1,4 @@
-![Backend CI](https://github.com/Fatema-Akther/ecommerce-platform-backend/actions/workflows/ci.yml/badge.svg)
+
 
 
 <p align="center">
@@ -6,6 +6,10 @@
 </p>
 
 # 🛒 E-Commerce Backend API
+
+[![Backend CI](https://github.com/Fatema-Akther/ecommerce-platform-backend/actions/workflows/ci.yml/badge.svg)](https://github.com/Fatema-Akther/ecommerce-platform-backend/actions/workflows/ci.yml)
+
+
 
 ![NestJS](https://img.shields.io/badge/NestJS-v11-red)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5-blue)
@@ -15,7 +19,7 @@
 ![Shippo](https://img.shields.io/badge/Shippo-Integrated-00B388)
 ![Stripe](https://img.shields.io/badge/Stripe-Test%20Mode-635BFF)
 
-Production-ready **NestJS** backend powering a complete eCommerce platform with secure authentication, advanced order management, inventory control, shipping integration, and business analytics.
+A feature-rich NestJS backend powering a complete eCommerce platform with secure authentication, advanced order management, inventory control, shipping integration, and business analytics.
 
 ---
 
@@ -212,6 +216,120 @@ Inventory Updated
 ```
 
 ---
+
+
+---
+
+# 🧪 Testing & Quality Assurance
+
+This project uses **Jest** for automated unit testing to validate critical backend business logic, authentication, authorization, and e-commerce operations.
+
+### Test Results
+
+| Metric | Result |
+|---|---:|
+| Test Suites | 10 Passed |
+| Total Test Cases | 116 Passed |
+| Failed Tests | 0 |
+| Testing Framework | Jest |
+
+### Tested Modules
+
+| Module | Testing Coverage |
+|---|---|
+| Authentication | Registration, login, JWT, email verification |
+| Authorization | Admin guards, role-based access control |
+| Users | User management and service logic |
+| Products | Creation, SKU, slug, variants, archive, restore and deletion |
+| Orders | Status transitions, stock restoration, fraud review and admin authorization |
+
+### Running Tests Locally
+
+Run all unit tests:
+
+```bash
+npm test -- --runInBand
+```
+
+Run tests with coverage:
+
+```bash
+npm run test:cov -- --runInBand
+```
+
+Build the application:
+
+```bash
+npm run build
+```
+
+### Code Coverage Report
+
+Latest locally generated Jest coverage report:
+
+| Coverage Metric | Result |
+|---|---:|
+| Statements | 24.80% |
+| Branches | 12.55% |
+| Functions | 17.32% |
+| Lines | 24.33% |
+
+**Selected Module Coverage**
+
+| Module | Statements | Lines |
+|---|---:|---:|
+| Authentication | 93.80% | 94.62% |
+| Users | 87.03% | 89.36% |
+| Products | 34.93% | 35.02% |
+| Orders | 32.90% | 32.87% |
+
+> Note: Coverage figures represent the latest local Jest coverage report and may change as additional tests are added.
+
+HTML coverage reports are generated locally at:
+
+```text
+coverage/lcov-report/index.html
+```
+
+---
+
+## ⚙️ Continuous Integration & Deployment
+
+This project uses **GitHub Actions** for continuous integration and **Render** for automated deployment.
+
+### Continuous Integration (GitHub Actions)
+
+The CI workflow runs automatically on every push and pull request targeting the `main` branch.
+
+**Pipeline Steps:**
+
+1. Checkout the repository.
+2. Set up Node.js 22.
+3. Install dependencies using `npm ci`.
+4. Run Jest automated tests.
+5. Build the NestJS application.
+
+**Workflow Configuration:**
+
+`.github/workflows/ci.yml`
+
+**CI Status:**
+
+[![Backend CI](https://github.com/Fatema-Akther/ecommerce-platform-backend/actions/workflows/ci.yml/badge.svg)](https://github.com/Fatema-Akther/ecommerce-platform-backend/actions/workflows/ci.yml)
+
+### Automated Deployment (Render)
+
+The backend is hosted on Render with GitHub integration.
+
+- Automatically detects new commits pushed to the configured branch.
+- Builds and deploys the latest committed code.
+- Updates the live backend API after successful deployment.
+
+**Production API:** https://api.sumashop.xyz
+
+*Note: GitHub Actions CI and Render deployment operate as separate workflows unless an explicit deployment dependency is configured.*
+
+
 
 # 📊 Main Business Modules
 
